@@ -492,7 +492,8 @@ rasad-platform/
 
 <img src="./public/favicon.svg" width="48" height="48" /><br/>
 <strong>زيد أبو الشعر</strong><br/>
-<em>Backend & infrastructure</em>
+<em>Backend & infrastructure</em><br/>
+<a href="https://github.com/ZaidAbuAlshaar">@ZaidAbuAlshaar</a>
 
 </td>
 </tr>
