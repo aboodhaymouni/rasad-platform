@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F1722"/>
+      <stop offset="1" stop-color="#0A0C0F"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="1080" cy="80" r="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C8392D" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#C8392D" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="160" cy="380" r="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6B9BD4" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#6B9BD4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="logo-bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C8392D"/>
+      <stop offset="1" stop-color="#E5594A"/>
+    </linearGradient>
+    <pattern id="grid" x="0" y="0" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#FFFFFF" stroke-opacity="0.025" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="420" fill="url(#bg)"/>
+  <rect width="1280" height="420" fill="url(#grid)"/>
+  <rect width="1280" height="420" fill="url(#glow1)"/>
+  <rect width="1280" height="420" fill="url(#glow2)"/>
+
+  <!-- Top status bar (LIVE indicator) -->
+  <g transform="translate(80, 50)">
+    <circle cx="6" cy="6" r="5" fill="#C8392D">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="22" y="11" font-family="'IBM Plex Mono', monospace" font-size="13" fill="#C8392D" letter-spacing="3">LIVE · مسابقة جامعة الزيتونة · مايو 2026</text>
+  </g>
+
+  <!-- Logo plate (on the left in this LTR-rendered banner) -->
+  <g transform="translate(80, 110)">
+    <rect width="100" height="100" rx="22" fill="url(#logo-bg)"/>
+    <rect x="0.5" y="0.5" width="99" height="99" rx="21.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.18"/>
+    <g transform="translate(50, 50)" stroke="#FFFFFF" stroke-linecap="round" stroke-width="5" fill="none">
+      <circle cx="0" cy="0" r="6"/>
+      <path d="M0 -28 a28 28 0 0 1 28 28" stroke-opacity="0.95"/>
+      <path d="M0 -18 a18 18 0 0 1 18 18" stroke-opacity="0.7"/>
+      <path d="M0 0 L 25 -25" stroke-opacity="0.95"/>
+    </g>
+    <circle cx="50" cy="50" r="3.5" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Title block -->
+  <g transform="translate(210, 130)">
+    <text x="0" y="0" font-family="'Bebas Neue', sans-serif" font-size="68" letter-spacing="6" fill="#FFFFFF">RASAD</text>
+    <text x="0" y="38" font-family="'Noto Kufi Arabic', sans-serif" font-weight="800" font-size="48" fill="#FFFFFF">رصد</text>
+    <text x="0" y="92" font-family="'Noto Kufi Arabic', sans-serif" font-weight="500" font-size="20" fill="#A0AEC0">منصة عربية للتحقق من الأخبار · 6 وكلاء ذكاء اصطناعي</text>
+  </g>
+
+  <!-- Right side: agent count + verdict pills -->
+  <g transform="translate(800, 110)">
+    <!-- Agent count card -->
+    <rect x="0" y="0" width="180" height="100" rx="14" fill="#0F1722" stroke="#FFFFFF" stroke-opacity="0.15"/>
+    <text x="90" y="42" text-anchor="middle" font-family="'Bebas Neue', sans-serif" font-size="48" fill="#E5594A" letter-spacing="2">06</text>
+    <text x="90" y="68" text-anchor="middle" font-family="'Noto Kufi Arabic', sans-serif" font-weight="600" font-size="13" fill="#A0AEC0">وكلاء AI متخصّصة</text>
+    <text x="90" y="86" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#6B9BD4" letter-spacing="2">SPECIALIZED AGENTS</text>
+  </g>
+
+  <g transform="translate(1000, 110)">
+    <rect x="0" y="0" width="180" height="100" rx="14" fill="#0F1722" stroke="#FFFFFF" stroke-opacity="0.15"/>
+    <text x="90" y="42" text-anchor="middle" font-family="'Bebas Neue', sans-serif" font-size="48" fill="#1A8A5A" letter-spacing="2">10s</text>
+    <text x="90" y="68" text-anchor="middle" font-family="'Noto Kufi Arabic', sans-serif" font-weight="600" font-size="13" fill="#A0AEC0">حكم بأدلة كاملة</text>
+    <text x="90" y="86" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9" fill="#6B9BD4" letter-spacing="2">EVIDENCE-BACKED</text>
+  </g>
+
+  <!-- Verdict pills row -->
+  <g transform="translate(80, 280)" font-family="'Noto Kufi Arabic', sans-serif" font-weight="700" font-size="17">
+    <g>
+      <rect x="0" y="0" width="105" height="42" rx="21" fill="#1A8A5A" fill-opacity="0.16" stroke="#1A8A5A" stroke-opacity="0.4"/>
+      <text x="52" y="27" text-anchor="middle" fill="#1A8A5A">موثوق</text>
+    </g>
+    <g transform="translate(120, 0)">
+      <rect x="0" y="0" width="105" height="42" rx="21" fill="#E8A020" fill-opacity="0.16" stroke="#E8A020" stroke-opacity="0.4"/>
+      <text x="52" y="27" text-anchor="middle" fill="#E8A020">مضلِّل</text>
+    </g>
+    <g transform="translate(240, 0)">
+      <rect x="0" y="0" width="105" height="42" rx="21" fill="#C8392D" fill-opacity="0.18" stroke="#C8392D" stroke-opacity="0.5"/>
+      <text x="52" y="27" text-anchor="middle" fill="#E5594A">كاذب</text>
+    </g>
+    <g transform="translate(360, 0)">
+      <rect x="0" y="0" width="155" height="42" rx="21" fill="#6B9BD4" fill-opacity="0.16" stroke="#6B9BD4" stroke-opacity="0.4"/>
+      <text x="77" y="27" text-anchor="middle" fill="#6B9BD4">مولَّد بالذكاء</text>
+    </g>
+    <g transform="translate(530, 0)">
+      <rect x="0" y="0" width="125" height="42" rx="21" fill="#A0AEC0" fill-opacity="0.16" stroke="#A0AEC0" stroke-opacity="0.4"/>
+      <text x="62" y="27" text-anchor="middle" fill="#A0AEC0">خبر قديم</text>
+    </g>
+    <g transform="translate(670, 0)">
+      <rect x="0" y="0" width="135" height="42" rx="21" fill="#C8392D" fill-opacity="0.22" stroke="#C8392D" stroke-opacity="0.6"/>
+      <text x="67" y="27" text-anchor="middle" fill="#FFFFFF">خطر مرتفع</text>
+    </g>
+  </g>
+
+  <!-- Footer status: tech stack -->
+  <g transform="translate(80, 360)" font-family="'IBM Plex Mono', monospace" font-size="11" fill="#6B9BD4" letter-spacing="2">
+    <text x="0" y="0">FastAPI · React 18 · Gemini 2.5 · CAMeL-BERT · Lenis · Tailwind</text>
+  </g>
+
+  <!-- Right corner: URL -->
+  <g transform="translate(1180, 360)">
+    <text x="0" y="0" text-anchor="end" font-family="'IBM Plex Mono', monospace" font-size="13" fill="#FFFFFF" letter-spacing="2">rasad-platform</text>
+  </g>
+</svg>
