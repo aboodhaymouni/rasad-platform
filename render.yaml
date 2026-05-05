@@ -1,0 +1,63 @@
+# Render Blueprint — RASAD backend on free tier
+# https://render.com/docs/blueprint-spec
+#
+# Deploy with one click via:
+#   https://render.com/deploy?repo=https://github.com/aboodhaymouni/rasad-platform
+#
+# Free tier reality:
+#   • 512 MB RAM, 0.1 CPU
+#   • Cold-starts after 15 min idle (~30 s wake-up)
+#   • Cannot host the local transformer models (~1.3 GB)
+#   ⇒ We run "lite mode": HF Inference API for A1/A3/A4, A2 disabled,
+#     no live monitor, no model prewarm.
+#
+# Required env vars (mark sync:false → Render asks you to paste at deploy time):
+#   GEMINI_API_KEY     ← https://aistudio.google.com/apikey
+#   HF_API_TOKEN       ← https://huggingface.co/settings/tokens
+#   TAVILY_API_KEY     ← https://tavily.com/  (optional, improves search)
+#   SERPER_API_KEY     ← https://serper.dev/  (optional)
+
+services:
+  - type: web
+    name: rasad-backend
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      # ─── User-provided secrets (Render prompts you) ───
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: HF_API_TOKEN
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: SERPER_API_KEY
+        sync: false
+
+      # ─── Lite-mode tweaks for the 512 MB tier ───
+      - key: A2_AI_DETECTOR_MODEL
+        value: disabled              # skips Organika/sdxl-detector (600 MB model)
+      - key: RASAD_PREWARM
+        value: "0"                   # don't preload local models at boot
+      - key: RASAD_LIVE_MONITOR
+        value: "0"                   # disable background RSS scrape (saves CPU/RAM)
+
+      # ─── Standard production config ───
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: AGENT_TIMEOUT_SECONDS
+        value: "30"
+      - key: CACHE_TTL_SECONDS
+        value: "86400"
+      # CORS — replace with your real frontend URL once you know it
+      # (Hostinger/Cloudflare/Netlify domain). Comma-separated for multiple.
+      - key: CORS_ORIGINS
+        value: "*"

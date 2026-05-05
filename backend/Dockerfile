@@ -25,6 +25,8 @@ RUN mkdir -p /app/hf_cache
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=8s --start-period=20s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/api/v1/health || exit 1
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use shell form so ${PORT} (set by Render / fly / cloud-run) is honoured.
+# Falls back to 8000 for local development.
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
