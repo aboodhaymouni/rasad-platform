@@ -83,9 +83,12 @@ class ClaimTracerAgent:
                 if isinstance(pub, str):
                     pub_dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
                 elif isinstance(pub, datetime):
-                    pub_dt = pub if pub.tzinfo else pub.replace(tzinfo=timezone.utc)
+                    pub_dt = pub
                 else:
                     continue
+                # Force tz-awareness so datetime arithmetic with `now` (UTC) works
+                if pub_dt.tzinfo is None:
+                    pub_dt = pub_dt.replace(tzinfo=timezone.utc)
             except Exception:
                 continue
             sortable.append((pub_dt, m))

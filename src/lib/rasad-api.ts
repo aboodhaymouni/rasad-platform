@@ -162,7 +162,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!headers.has("Content-Type") && init.body && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
-  const resp = await fetch(url, { ...init, headers });
+  let resp: Response;
+  try {
+    resp = await fetch(url, { ...init, headers });
+  } catch (e) {
+    // Network-level failure: backend unreachable, CORS, DNS, …
+    const isLocalhost = /(?:localhost|127\.0\.0\.1)/.test(RASAD_API_BASE);
+    const hint = isLocalhost
+      ? "خادم التحقق غير شغّال على هذا الجهاز. شغّل الـ backend (uvicorn) أو حدّث VITE_RASAD_API_URL ليُشير لخادم بعيد."
+      : `تعذّر الاتصال بـ ${RASAD_API_BASE}. تأكّد أن الـ backend منشور وأن CORS يسمح لهذا الدومين.`;
+    throw new RasadApiError(hint, 0, e instanceof Error ? e.message : String(e));
+  }
   if (!resp.ok) {
     let detail: string | undefined;
     try {
@@ -170,6 +180,15 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       detail = body?.detail || body?.message || JSON.stringify(body).slice(0, 200);
     } catch {
       detail = await resp.text().catch(() => undefined);
+    }
+    // 404 on the verify endpoints almost always means the backend isn't deployed
+    // (e.g. frontend on a static host pointing at localhost or a wrong URL).
+    if (resp.status === 404 && /\/verify\//.test(path)) {
+      throw new RasadApiError(
+        `الـ API endpoint غير موجود (${path}). تحقّق من VITE_RASAD_API_URL — قد تكون قيمته مُهيّأة لـ localhost على Hostinger، أو الـ backend غير مُشغّل.`,
+        404,
+        detail,
+      );
     }
     throw new RasadApiError(
       `RASAD API ${resp.status}: ${resp.statusText}`,
