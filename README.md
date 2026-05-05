@@ -348,16 +348,42 @@ VITE_SUPABASE_PUBLISHABLE_KEY=...
 
 ## 🚢 النشر
 
-دليل خطوة بخطوة على Hostinger VPS مع SSL ودومين:
+> **❓ هل أحتاج إعداد أم بس أعطي الرابط؟**
+>
+> **لا — الرابط وحده لا يكفي.** الـ backend (Python + AI models) يحتاج VPS، والمفاتيح يجب وضعها يدوياً (مش في الـ repo). الخبر السار: عندنا سكربت يخلّي كل ذلك دقيقتين.
 
-> **➡️ راجع [DEPLOY.md](./DEPLOY.md)** — يأخذ 30 دقيقة من البداية للنهاية، يكلّف ~$11/شهر.
+### ⚡ الطريقة الأسرع — سطر واحد على VPS
 
-ملخص:
-1. Hostinger VPS KVM 2 (4GB RAM)
-2. SSH + استنساخ هذا المستودع
-3. ضع المفاتيح في `backend/.env`
-4. `docker compose up -d --build`
-5. nginx reverse proxy + Let's Encrypt SSL
+```bash
+curl -fsSL https://raw.githubusercontent.com/aboodhaymouni/rasad-platform/main/deploy.sh | bash
+```
+
+السكربت يقوم بكل شيء آلياً:
+- ✅ يثبّت Docker + Docker Compose
+- ✅ يستنسخ الـ repo
+- ✅ ينشئ ملفات `.env` من القوالب
+- ✅ يفتح الـ firewall ports
+- ✅ يبني ويشغّل الـ containers
+- ✅ يفحص الصحة
+
+**الخطوات اليدوية المتبقّية بعد السكربت:**
+1. ضع مفاتيحك في `backend/.env` (السكربت ينشئ الملف ويُذكّرك)
+2. (اختياري) اربط دومين + SSL عبر nginx + certbot
+
+### ❌ Hostinger Shared Hosting لن يعمل
+
+السبب: Shared hosting ما يدعم Python أو Docker. الـ backend يحتاج بيئة كاملة.
+
+**الحلّ:** Hostinger **VPS** (KVM 2 — 4GB RAM، ~$8/شهر).
+
+### ✅ الفرق بين Frontend وحده والنظام الكامل
+
+| النشر | يعمل على | الميزات الفعّالة |
+|-------|---------|-------------------|
+| Frontend فقط (static) | Shared / Cloud / Netlify | الواجهة فقط — لا تحقق، لا live ticker، لا حكم |
+| **النظام الكامل** | **VPS مع Docker** | كل الميزات — 6 وكلاء، تحقق فوري، live monitor |
+
+> **➡️ التفاصيل الكاملة (nginx + SSL + DNS + monitoring):** [DEPLOY.md](./DEPLOY.md)
 
 ---
 
