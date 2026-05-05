@@ -3,10 +3,31 @@
  *
  * The backend (Python FastAPI) lives separately from Supabase. Auth is still
  * handled by Supabase; only verification calls flow through this adapter.
+ *
+ * Resolution order for the API base URL:
+ *   1. VITE_RASAD_API_URL (env var)         — explicit override wins
+ *   2. localhost / 127.0.0.1                — dev → http://localhost:8000/api/v1
+ *   3. anything else (vercel, netlify, …)   — prod → Render-deployed backend
+ *
+ * This means a `git clone` works for both:
+ *   • Judges running everything locally  → step 2 picks the local backend.
+ *   • Frontend deployed to a cloud host  → step 3 picks the live Render backend.
  */
+function resolveApiBase(): string {
+  const fromEnv = (import.meta as any).env?.VITE_RASAD_API_URL as string | undefined;
+  if (fromEnv && fromEnv.trim().length > 0) return fromEnv;
 
-export const RASAD_API_BASE: string =
-  (import.meta as any).env?.VITE_RASAD_API_URL ?? "http://localhost:8000/api/v1";
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")) {
+      return "http://localhost:8000/api/v1";
+    }
+  }
+  // Production fallback — Render-deployed backend (Frankfurt, free tier)
+  return "https://rasad-backend-0fa5.onrender.com/api/v1";
+}
+
+export const RASAD_API_BASE: string = resolveApiBase();
 
 export type AgentMode = "real" | "demo" | "fallback" | "mixed";
 export type ConfidenceLevel = "high" | "medium" | "low" | "insufficient_data" | "timeout";
