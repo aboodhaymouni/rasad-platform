@@ -88,7 +88,36 @@ class VerdictEngine:
         else:
             run_mode = "demo"
 
-        explanation = await self._explain(
+        # ─────────────────────────────────────────────────────────────────
+        # Gemini SECOND-OPINION FALLBACK
+        # On low-resource hosts (Render free tier 512 MB), A3/A4 frequently
+        # time out before producing matches, which makes the rule-based
+        # classifier always return UNVERIFIED at 50%. Once that happens the
+        # demo turns into a single-button echo. We let Gemini classify the
+        # claim from its own knowledge whenever the agent pipeline produced
+        # no real signal — this brings genuinely-false claims back to FALSE.
+        # ─────────────────────────────────────────────────────────────────
+        agents_have_signal = (
+            len(a3.raw.get("matches") or []) > 0
+            or a4.mode == "real"
+            or a1.mode == "real"
+        )
+        gemini_explanation: Optional[str] = None
+        if (
+            verdict_label == VerdictLabel.UNVERIFIED
+            and not agents_have_signal
+            and self.gemini_key
+            and not self._gemini_failed
+        ):
+            gemini_label, gemini_conf, gemini_explanation = await self._gemini_classify(
+                content_text
+            )
+            if gemini_label is not None:
+                verdict_label = gemini_label
+                confidence = gemini_conf
+                run_mode = "mixed" if run_mode == "demo" else run_mode
+
+        explanation = gemini_explanation or await self._explain(
             verdict_label, a1, a3, a4, a5, a2, content_text
         )
 
@@ -302,3 +331,88 @@ class VerdictEngine:
             self._gemini_failed = True
             self._gemini_model = None
         return self._gemini_model
+
+    async def _gemini_classify(
+        self, content: str
+    ) -> tuple[Optional[VerdictLabel], int, Optional[str]]:
+        """Ask Gemini to directly classify the claim.
+
+        Used as a second-opinion fallback when the rule-based classifier
+        returned UNVERIFIED *and* the upstream agents produced no real
+        signal (e.g. A3/A4 timed out on the free tier). Returns
+        ``(label, confidence, explanation)`` — or ``(None, 0, None)`` if
+        Gemini couldn't decide and we should keep the original UNVERIFIED.
+        """
+        try:
+            return await asyncio.wait_for(
+                self._call_gemini_classify(content), timeout=15.0
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Gemini classify timed out (>15s)")
+            return None, 0, None
+        except Exception as e:
+            logger.warning("Gemini classify failed: %s (%s)", type(e).__name__, e)
+            return None, 0, None
+
+    async def _call_gemini_classify(
+        self, content: str
+    ) -> tuple[Optional[VerdictLabel], int, Optional[str]]:
+        import json as _json
+        import re as _re
+
+        loop = asyncio.get_running_loop()
+        model = self._get_gemini_model()
+        if model is None:
+            return None, 0, None
+
+        prompt = (
+            "أنت محلل أخبار يعمل ضمن منصة RASAD لكشف الأخبار الكاذبة. "
+            "بناءً على معرفتك العامة والوقائع الموثقة، صنّف الادعاء التالي:\n\n"
+            f"« {content[:1500]} »\n\n"
+            "أجب فقط بـ JSON على هذا الشكل بالضبط (بدون أي نص قبله أو بعده، "
+            "بدون markdown، بدون code fences):\n"
+            "{\n"
+            '  "verdict": "VERIFIED | FALSE | MISLEADING | UNVERIFIED",\n'
+            '  "confidence": <رقم بين 0 و 100>,\n'
+            '  "explanation": "<3 جمل عربية متتالية توضح الحكم وسببه وما '
+            'يجب على القارئ فعله>"\n'
+            "}\n\n"
+            "قواعد الحكم:\n"
+            "- VERIFIED: إذا كان الادعاء صحيح ومثبت من معرفتك العامة\n"
+            "- FALSE: إذا كان الادعاء يتعارض بوضوح مع وقائع موثقة\n"
+            "- MISLEADING: إذا كان جزئي الصحة أو ينقصه سياق مهم\n"
+            "- UNVERIFIED: فقط إذا لم تكن متأكداً ولا تستطيع الحكم\n"
+            "- confidence يعكس مدى ثقتك بحكمك (تعطي رقم عالي فقط لو كنت "
+            "متأكداً جداً)\n"
+        )
+
+        try:
+            response = await loop.run_in_executor(
+                None, lambda: model.generate_content(prompt)
+            )
+            raw = (response.text or "").strip()
+            # Strip markdown fences if Gemini ignored instructions
+            raw = _re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=_re.MULTILINE)
+            data = _json.loads(raw)
+            label_str = str(data.get("verdict", "")).strip().upper()
+            try:
+                label = VerdictLabel(label_str)
+            except Exception:
+                return None, 0, None
+            if label == VerdictLabel.UNVERIFIED:
+                # Gemini also gave up — keep the rule-based UNVERIFIED
+                return None, 0, None
+            conf_raw = data.get("confidence", 0)
+            try:
+                conf = int(round(float(conf_raw)))
+            except (TypeError, ValueError):
+                conf = 50
+            conf = max(0, min(100, conf))
+            explanation = str(data.get("explanation", "")).strip() or None
+            return label, conf, explanation
+        except _json.JSONDecodeError as e:
+            logger.warning("Gemini classify returned invalid JSON: %s", e)
+            return None, 0, None
+        except Exception as e:
+            logger.warning("Gemini classify call error: %s", e)
+            return None, 0, None
